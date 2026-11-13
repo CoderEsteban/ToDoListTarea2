@@ -1,0 +1,445 @@
+﻿@{
+    ViewBag.Title = "Mis tareas";
+}
+
+<h2>Administración de tareas</h2>
+
+<p>
+    Registre y administre sus tareas personales.
+</p>
+
+
+<form id="formCrear">
+
+    @Html.AntiForgeryToken()
+
+    <div class="row mb-3">
+
+        <div class="col-md-4">
+
+            <label class="form-label">
+                Título
+            </label>
+
+            <input type="text"
+                   id="titulo"
+                   class="form-control"
+                   maxlength="150"
+                   placeholder="Título de la tarea" />
+
+        </div>
+
+
+        <div class="col-md-6">
+
+            <label class="form-label">
+                Descripción
+            </label>
+
+            <input type="text"
+                   id="descripcion"
+                   class="form-control"
+                   maxlength="500"
+                   placeholder="Descripción de la tarea" />
+
+        </div>
+
+
+        <div class="col-md-2 d-flex align-items-end">
+
+            <button type="submit"
+                    class="btn btn-primary w-100">
+
+                Crear tarea
+
+            </button>
+
+        </div>
+
+    </div>
+
+</form>
+
+
+<div id="mensaje"></div>
+
+
+<hr />
+
+
+<div class="mb-3">
+
+    <strong>Filtrar:</strong>
+
+    <button type="button"
+            class="btn btn-outline-secondary filtro"
+            data-filtro="todas">
+
+        Todas
+
+    </button>
+
+    <button type="button"
+            class="btn btn-outline-secondary filtro"
+            data-filtro="pendientes">
+
+        Pendientes
+
+    </button>
+
+    <button type="button"
+            class="btn btn-outline-secondary filtro"
+            data-filtro="completadas">
+
+        Completadas
+
+    </button>
+
+</div>
+
+
+<div id="contenedorTareas">
+
+    <div class="text-center p-3">
+        Cargando tareas...
+    </div>
+
+</div>
+
+
+@section Scripts {
+
+    <script>
+
+    var filtroActual = 'todas';
+
+
+    function obtenerToken() {
+
+        return $('#formCrear input[name="__RequestVerificationToken"]').val();
+    }
+
+
+    function mostrarMensaje(texto, correcto) {
+
+        var clase =
+            correcto
+                ? 'alert-success'
+                : 'alert-danger';
+
+
+        $('#mensaje').html(
+            '<div class="alert ' +
+            clase +
+            '">' +
+            texto +
+            '</div>'
+        );
+    }
+
+
+    function cargarTareas() {
+
+        $.ajax({
+
+            url:
+                '@Url.Action("Lista", "Tareas")',
+
+            type:
+                'GET',
+
+            data: {
+                filtro:
+                    filtroActual
+            },
+
+            success:
+                function (resultado) {
+
+                    $('#contenedorTareas')
+                        .html(resultado);
+                },
+
+            error:
+                function () {
+
+                    mostrarMensaje(
+                        'Error al cargar las tareas.',
+                        false
+                    );
+                }
+
+        });
+    }
+
+
+    $('#formCrear').on(
+        'submit',
+        function (e) {
+
+            e.preventDefault();
+
+
+            var titulo =
+                $('#titulo').val();
+
+            var descripcion =
+                $('#descripcion').val();
+
+
+            $.ajax({
+
+                url:
+                    '@Url.Action("Crear", "Tareas")',
+
+                type:
+                    'POST',
+
+                data: {
+
+                    __RequestVerificationToken:
+                        obtenerToken(),
+
+                    titulo:
+                        titulo,
+
+                    descripcion:
+                        descripcion
+                },
+
+                success:
+                    function (respuesta) {
+
+                        mostrarMensaje(
+                            respuesta.mensaje,
+                            respuesta.ok
+                        );
+
+
+                        if (respuesta.ok) {
+
+                            $('#titulo').val('');
+
+                            $('#descripcion').val('');
+
+                            cargarTareas();
+                        }
+                    },
+
+                error:
+                    function () {
+
+                        mostrarMensaje(
+                            'Error al crear la tarea.',
+                            false
+                        );
+                    }
+
+            });
+
+        }
+    );
+
+
+    $(document).on(
+        'click',
+        '.cambiar-estado',
+        function () {
+
+            var id =
+                $(this).data('id');
+
+
+            $.ajax({
+
+                url:
+                    '@Url.Action("CambiarEstado", "Tareas")',
+
+                type:
+                    'POST',
+
+                data: {
+
+                    __RequestVerificationToken:
+                        obtenerToken(),
+
+                    id:
+                        id
+                },
+
+                success:
+                    function (respuesta) {
+
+                        mostrarMensaje(
+                            respuesta.mensaje,
+                            respuesta.ok
+                        );
+
+                        if (respuesta.ok) {
+                            cargarTareas();
+                        }
+                    }
+
+            });
+
+        }
+    );
+
+
+    $(document).on(
+        'click',
+        '.editar-tarea',
+        function () {
+
+            var id =
+                $(this).data('id');
+
+            var tituloActual =
+                $(this).attr('data-titulo');
+
+            var descripcionActual =
+                $(this).attr('data-descripcion');
+
+
+            var nuevoTitulo =
+                prompt(
+                    'Nuevo título:',
+                    tituloActual
+                );
+
+
+            if (nuevoTitulo === null) {
+                return;
+            }
+
+
+            var nuevaDescripcion =
+                prompt(
+                    'Nueva descripción:',
+                    descripcionActual
+                );
+
+
+            if (nuevaDescripcion === null) {
+                return;
+            }
+
+
+            $.ajax({
+
+                url:
+                    '@Url.Action("Editar", "Tareas")',
+
+                type:
+                    'POST',
+
+                data: {
+
+                    __RequestVerificationToken:
+                        obtenerToken(),
+
+                    id:
+                        id,
+
+                    titulo:
+                        nuevoTitulo,
+
+                    descripcion:
+                        nuevaDescripcion
+                },
+
+                success:
+                    function (respuesta) {
+
+                        mostrarMensaje(
+                            respuesta.mensaje,
+                            respuesta.ok
+                        );
+
+                        if (respuesta.ok) {
+                            cargarTareas();
+                        }
+                    }
+
+            });
+
+        }
+    );
+
+
+    $(document).on(
+        'click',
+        '.eliminar-tarea',
+        function () {
+
+            var id =
+                $(this).data('id');
+
+
+            if (!confirm(
+                '¿Desea eliminar esta tarea?'
+            )) {
+                return;
+            }
+
+
+            $.ajax({
+
+                url:
+                    '@Url.Action("Eliminar", "Tareas")',
+
+                type:
+                    'POST',
+
+                data: {
+
+                    __RequestVerificationToken:
+                        obtenerToken(),
+
+                    id:
+                        id
+                },
+
+                success:
+                    function (respuesta) {
+
+                        mostrarMensaje(
+                            respuesta.mensaje,
+                            respuesta.ok
+                        );
+
+                        if (respuesta.ok) {
+                            cargarTareas();
+                        }
+                    }
+
+            });
+
+        }
+    );
+
+
+    $('.filtro').on(
+        'click',
+        function () {
+
+            filtroActual =
+                $(this).data('filtro');
+
+            cargarTareas();
+
+        }
+    );
+
+
+    $(document).ready(
+        function () {
+
+            cargarTareas();
+
+        }
+    );
+
+    </script>
+
+}

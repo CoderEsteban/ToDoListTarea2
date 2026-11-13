@@ -1,0 +1,98 @@
+﻿@model IEnumerable<ToDoListTarea2.Models.Tarea>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">
+        No hay tareas para mostrar.
+    </div>
+}
+else
+{
+    <table class="table table-bordered table-striped">
+
+        <thead>
+            <tr>
+                <th style="width: 60px;">#</th>
+                <th>Título</th>
+                <th>Descripción</th>
+                <th style="width: 130px;">Estado</th>
+                <th style="width: 280px;">Acciones</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+            @foreach (var tarea in Model)
+            {
+                <tr>
+
+                    <td>
+                        @tarea.Id
+                    </td>
+
+                    <td>
+                        @tarea.Titulo
+                    </td>
+
+                    <td>
+                        @tarea.Descripcion
+                    </td>
+
+                    <td>
+
+                        @if (tarea.Completada)
+                        {
+                            <span class="badge bg-success">
+                                Completada
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-warning text-dark">
+                                Pendiente
+                            </span>
+                        }
+
+                    </td>
+
+                    <td>
+
+                        <button type="button"
+                                class="btn btn-sm btn-success cambiar-estado"
+                                data-id="@tarea.Id">
+
+                            @(tarea.Completada
+                                ? "Marcar pendiente"
+                                : "Completar")
+
+                        </button>
+
+
+                        <button type="button"
+                                class="btn btn-sm btn-primary editar-tarea"
+                                data-id="@tarea.Id"
+                                data-titulo="@tarea.Titulo"
+                                data-descripcion="@tarea.Descripcion">
+
+                            Editar
+
+                        </button>
+
+
+                        <button type="button"
+                                class="btn btn-sm btn-danger eliminar-tarea"
+                                data-id="@tarea.Id">
+
+                            Eliminar
+
+                        </button>
+
+                    </td>
+
+                </tr>
+            }
+
+        </tbody>
+
+    </table>
+}
